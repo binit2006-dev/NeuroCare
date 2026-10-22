@@ -2,7 +2,26 @@ import axios from "axios";
 
 export const API_BASE = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-export const api = axios.create({ baseURL: API_BASE });
+export const api = axios.create({ baseURL: API_BASE, withCredentials: true });
+
+export async function exchangeSession(sessionId) {
+  const { data } = await api.post("/auth/session", { session_id: sessionId });
+  return data;
+}
+
+export async function fetchMe() {
+  const { data } = await api.get("/auth/me");
+  return data;
+}
+
+export async function logoutApi() {
+  await api.post("/auth/logout");
+}
+
+export async function fetchMyScans() {
+  const { data } = await api.get("/my-scans");
+  return data;
+}
 
 export async function predictMRI(file, location) {
   const fd = new FormData();

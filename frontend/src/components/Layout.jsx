@@ -1,9 +1,11 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { Brain } from "lucide-react";
 import { useEffect } from "react";
+import UserMenu from "@/components/UserMenu";
 
 const nav = [
   { to: "/", label: "Scan" },
+  { to: "/history", label: "My Scans" },
   { to: "/about", label: "About PINN" },
   { to: "/downloads", label: "Downloads" },
 ];
@@ -43,6 +45,7 @@ export default function Layout() {
                 {n.label}
               </NavLink>
             ))}
+            <UserMenu />
           </nav>
         </div>
       </header>

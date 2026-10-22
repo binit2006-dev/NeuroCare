@@ -1,5 +1,7 @@
-from fastapi import FastAPI, APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, APIRouter, UploadFile, File, Form, HTTPException, Request, Response
 from fastapi.responses import FileResponse
+from datetime import timedelta
+import httpx
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -44,9 +46,22 @@ logger = logging.getLogger(__name__)
 # -----------------------------------------------------------------------------
 # Models
 # -----------------------------------------------------------------------------
+class User(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    user_id: str
+    email: str
+    name: str
+    picture: Optional[str] = None
+
+
+class SessionRequest(BaseModel):
+    session_id: str
+
+
 class ScanRecord(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: Optional[str] = None
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     filename: str
     location: Optional[str] = None
@@ -67,6 +82,103 @@ class AdviceRequest(BaseModel):
 
 
 # -----------------------------------------------------------------------------
+# Auth (Emergent-managed Google sign-in)
+# -----------------------------------------------------------------------------
+EMERGENT_SESSION_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
+SESSION_DAYS = 7
+
+
+async def get_optional_user(request: Request) -> Optional[User]:
+    token = request.cookies.get("session_token")
+    if not token:
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            token = auth[7:]
+    if not token:
+        return None
+    session = await db.user_sessions.find_one({"session_token": token}, {"_id": 0})
+    if not session:
+        return None
+    expires_at = session["expires_at"]
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at)
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < datetime.now(timezone.utc):
+        return None
+    user_doc = await db.users.find_one({"user_id": session["user_id"]}, {"_id": 0})
+    return User(**user_doc) if user_doc else None
+
+
+async def get_current_user(request: Request) -> User:
+    user = await get_optional_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
+
+
+@api_router.post("/auth/session")
+async def create_session(body: SessionRequest, response: Response):
+    async with httpx.AsyncClient(timeout=15) as http:
+        r = await http.get(EMERGENT_SESSION_URL, headers={"X-Session-ID": body.session_id})
+    if r.status_code != 200:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    data = r.json()
+
+    existing = await db.users.find_one({"email": data["email"]}, {"_id": 0})
+    if existing:
+        user_id = existing["user_id"]
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$set": {"name": data["name"], "picture": data.get("picture")}},
+        )
+    else:
+        user_id = f"user_{uuid.uuid4().hex[:12]}"
+        await db.users.insert_one({
+            "user_id": user_id,
+            "email": data["email"],
+            "name": data["name"],
+            "picture": data.get("picture"),
+            "created_at": datetime.now(timezone.utc),
+        })
+
+    token = data["session_token"]
+    await db.user_sessions.insert_one({
+        "user_id": user_id,
+        "session_token": token,
+        "expires_at": datetime.now(timezone.utc) + timedelta(days=SESSION_DAYS),
+        "created_at": datetime.now(timezone.utc),
+    })
+    response.set_cookie(
+        key="session_token", value=token, httponly=True, secure=True,
+        samesite="none", path="/", max_age=SESSION_DAYS * 24 * 3600,
+    )
+    user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    return User(**user_doc).model_dump()
+
+
+@api_router.get("/auth/me")
+async def auth_me(request: Request):
+    user = await get_current_user(request)
+    return user.model_dump()
+
+
+@api_router.post("/auth/logout")
+async def logout(request: Request, response: Response):
+    token = request.cookies.get("session_token")
+    if token:
+        await db.user_sessions.delete_one({"session_token": token})
+    response.delete_cookie("session_token", path="/", secure=True, samesite="none")
+    return {"ok": True}
+
+
+@api_router.get("/my-scans")
+async def my_scans(request: Request):
+    user = await get_current_user(request)
+    return await db.scans.find({"user_id": user.user_id}, {"_id": 0}).sort("created_at", -1).to_list(100)
+
+
+# -----------------------------------------------------------------------------
 # Routes
 # -----------------------------------------------------------------------------
 @api_router.get("/")
@@ -80,7 +192,8 @@ async def model_status():
 
 
 @api_router.post("/predict")
-async def predict(mri: UploadFile = File(...), location: str = Form("")):
+async def predict(request: Request, mri: UploadFile = File(...), location: str = Form("")):
+    user = await get_optional_user(request)
     if not mri.content_type or not mri.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Please upload a valid MRI image (jpg/png).")
 
@@ -96,6 +209,7 @@ async def predict(mri: UploadFile = File(...), location: str = Form("")):
 
     record = ScanRecord(
         id=scan_id,
+        user_id=user.user_id if user else None,
         filename=mri.filename,
         location=location,
         tumor_detected=result.tumor_detected,
@@ -241,10 +355,12 @@ async def download_file(filename: str):
 
 app.include_router(api_router)
 
+_cors = os.environ.get("CORS_ORIGINS", "*")
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
+    allow_origins=[] if _cors == "*" else _cors.split(","),
+    allow_origin_regex=".*" if _cors == "*" else None,
     allow_methods=["*"],
     allow_headers=["*"],
 )
