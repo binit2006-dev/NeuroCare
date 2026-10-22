@@ -1,0 +1,114 @@
+{
+  "theme": "light",
+  "typography": {
+    "headings": {
+      "family": "Outfit",
+      "weight": "font-light to font-medium",
+      "tracking": "tracking-tight",
+      "description": "Clean, approachably modern without being strictly medical. Soft geometric sans that feels friendly."
+    },
+    "body": {
+      "family": "Inter",
+      "weight": "font-normal",
+      "tracking": "tracking-normal",
+      "description": "Highly readable, reliable, clean text for medical data and advice."
+    },
+    "scale": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl",
+      "h3": "text-xl sm:text-2xl",
+      "body": "text-base sm:text-lg"
+    }
+  },
+  "colors": {
+    "archetype": "Organic & Earthy mixed with Pastel & Soft",
+    "description": "Calming, trustworthy, and mood-improving. Replaces harsh medical sterile whites and panic-inducing reds with warm, nature-inspired tones.",
+    "palette": {
+      "background": "#FDFBF7",
+      "surface": "#FFFFFF",
+      "primary": "#4A7c59",
+      "primary_hover": "#3a6347",
+      "secondary": "#E8B49B",
+      "accent": "#8ab0ab",
+      "text_primary": "#1A1A1A",
+      "text_secondary": "#5C5C5C",
+      "success_soft": "#E6F3EB",
+      "warning_soft": "#FFF0E6",
+      "border": "#E5E0D8"
+    },
+    "forbidden_colors": ["#7351B7", "#1B93A4", "#FF0000", "#000000"]
+  },
+  "layouts": {
+    "spacing": "Generous spacing. Use p-8, p-12, p-16. Containers must have internal padding. Margin bottoms on sections should be at least mb-24.",
+    "grid_strategy": "The Bento Grid Protocol with generous gaps (gap-8). Cards should be rectangular with max 8px border-radius.",
+    "navigation": "Sticky nav with Glassmorphism (bg-white/70 backdrop-blur-xl border-b border-white/40). Always visible on desktop. No transparent backgrounds without blur.",
+    "hero": "Split layout with organic 3D shapes or calm images, avoiding standard SaaS right-left format. Use asymmetric overlaps.",
+    "dashboard": "Action-first layout. Single primary verdict area, supportive trends. Progressive disclosure for deep data."
+  },
+  "visual_enhancers": {
+    "surfaces": "Neumorphism (Tactile Variant) for small buttons. Flat Solid backgrounds with subtle 1px borders (border-border/40) for dashboard cards.",
+    "effects": "Subtle noise overlays (grain) to kill digital flatness. Layered ambient shadows instead of harsh drop shadows.",
+    "motion": "Calm, slow transitions. Subtle loading animations (breathing/pulsing) instead of frantic spinners. Page reveals should feel like a deep breath.",
+    "borders": "Soft, crisp edges. Nested radii. No thick, harsh borders."
+  },
+  "components": {
+    "upload_zone": "Large drag-and-drop area. Dashed border with primary color tint. Soft hover state (bg-primary/5).",
+    "results_card": "Instead of red for detection, use a neutral warm tone (like peach or warm gray) to present the result objectively without causing panic. Use clear, compassionate language.",
+    "buttons": "Pill-shaped or rounded-md. Primary CTA uses solid primary color. Secondary CTAs use soft backgrounds with text-primary.",
+    "charts": "Shadcn charts (Recharts). Use soft palettes. Avoid harsh grid lines."
+  },
+  "images": [
+    {
+      "url": "https://images.unsplash.com/photo-1761888856976-c4bc8303f65f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDN8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMGNhbG0lMjBvcmdhbmljJTIwc2hhcGVzfGVufDB8fHx8MTc5MjY1OTE4NXww&ixlib=rb-4.1.0&q=85",
+      "category": "Hero Background / Abstract Art",
+      "description": "Soft orange abstract shapes, creates a warm, optimistic feeling for the landing or loading screens."
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1Mjh8MHwxfHNlYXJjaHwxfHxkb2N0b3IlMjBzbWlsaW5nJTIwcGF0aWVudHxlbnwwfHx8fDE3OTI2NTkxODV8MA&ixlib=rb-4.1.0&q=85",
+      "category": "Medical Advice / Doctors Section",
+      "description": "A smiling doctor talking to a patient. Builds trust and human connection for the Nearby Hospitals section."
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1761888857230-1659946aaa8b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDN8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMGNhbG0lMjBvcmdhbmljJTIwc2hhcGVzfGVufDB8fHx8MTc5MjY1OTE4NXww&ixlib=rb-4.1.0&q=85",
+      "category": "About PINN Model / Technology",
+      "description": "Abstract blue waves. Represents technology, flow, and the AI model without being sterile or cold."
+    }
+  ],
+  "instructions_to_main_agent": [
+    "Build a Next.js (or React) frontend using Tailwind CSS and shadcn/ui components.",
+    "Do not use generic 'Inter' for headings. Install and use 'Outfit' (or similar soft geometric sans) from Google Fonts for headings.",
+    "Implement a calming Hero section with a split asymmetric layout, using the abstract orange shapes image. Avoid standard SaaS layout.",
+    "Create an intuitive drag-and-drop file upload component for the MRI scan. Include a text input for City/Pincode below the uploader.",
+    "The analysis loading state MUST NOT be a standard fast spinner. Use a 'breathing' animation or pulsing wave to keep the user calm while scanning.",
+    "Design the Results Dashboard carefully: Avoid giant RED text for positive tumor detection. Use a neutral or warm peach tone and compassionate copy (e.g., 'Information available. Let us look at the next steps together.').",
+    "Integrate an AI-generated Information section. Format the text beautifully with good line-height, using cards to break down complex medical terms.",
+    "Create a 'Nearby Hospitals & Doctors' section using a bento grid of cards. Include a mock map or location pins. Display the emergency number prominently but cleanly.",
+    "Add a 'Mindset & Next Steps' educational section that is uplifting. Use the smiling doctor image here.",
+    "Build an 'About PINN Model' section explaining the tech (PINN = Physics-Informed Neural Network) in simple, reassuring terms.",
+    "Include a 'Downloads' page for sample MRI data/reports using simple list items with download icons.",
+    "For the backend PINN model integration, leave a clear commented placeholder or a mock API call in the frontend code (e.g., `uploadMRI()` function calling `/api/predict`).",
+    "All interactive elements MUST have a `data-testid` attribute (e.g., data-testid='upload-mri-button').",
+    "Ensure the app feels deeply empathetic, not like a cold generic data dashboard."
+  ],
+  "universal_guidelines_for_main_agent": [
+    "Do not center-align the app container (.App { text-align: center; } is banned).",
+    "Do not use `transition: all`. Target specific properties like `transition: transform 0.2s, opacity 0.2s`.",
+    "Use 2x-3x more padding/margin than feels normal (p-8, p-12). Cramped medical apps cause anxiety.",
+    "No AI emojis in the UI (like 🤖🧠💡). Use proper Phosphor or Lucide icons.",
+    "Never use raw transparent backgrounds on headers. Use `bg-white/80 backdrop-blur-md`.",
+    "Use sonner for toasts. Put toasts at bottom-center.",
+    "Use custom cursors or selection states for an elevated feel.",
+    "Add hover states to ALL interactive elements. Hover should slightly shift color or translateY(-1px)."
+  ],
+  "accessibility": {
+    "contrast": "Ensure all text meets WCAG AA standards. Avoid low-contrast grays.",
+    "motion": "Respect prefers-reduced-motion.",
+    "structure": "Use semantic HTML (header, main, section, article). Progressive disclosure for complex medical forms."
+  },
+  "libraries": {
+    "icons": "lucide-react",
+    "animations": "framer-motion",
+    "notifications": "sonner",
+    "components": "shadcn/ui"
+  }
+}

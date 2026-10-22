@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* NeuroCare fonts: Outfit for display, DM Sans for body */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+    :root {
+        --background: 36 50% 97%;        /* #FDFBF7 */
+        --foreground: 0 0% 10%;          /* #1A1A1A */
+        --card: 0 0% 100%;
+        --card-foreground: 0 0% 10%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 0 0% 10%;
+        --primary: 140 25% 39%;          /* #4A7c59 forest */
+        --primary-foreground: 36 50% 97%;
+        --secondary: 20 60% 76%;         /* #E8B49B peach */
+        --secondary-foreground: 0 0% 10%;
+        --muted: 36 25% 93%;
+        --muted-foreground: 0 0% 36%;    /* #5C5C5C */
+        --accent: 170 15% 62%;           /* #8ab0ab sage */
+        --accent-foreground: 0 0% 10%;
+        --destructive: 20 60% 60%;       /* warm, not red */
+        --destructive-foreground: 0 0% 100%;
+        --border: 36 20% 88%;            /* #E5E0D8 */
+        --input: 36 20% 88%;
+        --ring: 140 25% 39%;
+        --radius: 0.5rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}

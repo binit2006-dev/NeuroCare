@@ -1,0 +1,12 @@
+NeuroCare — Sample MRI Scans for Testing
+=========================================
+
+Place real sample MRI images in this folder (any .jpg or .png) and they
+will appear as downloads on the website.
+
+Suggested public datasets you can source MRI scans from:
+  • Kaggle: "Brain Tumor Classification MRI" by Sartaj
+  • Kaggle: "Brain MRI Images for Brain Tumor Detection" by Navoneel
+  • Figshare: Brain tumor dataset (3064 MRI images)
+
+Only use data you have permission to redistribute.
