@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchAdvice } from "@/lib/api";
 import { CheckCircle2, Info, Phone, Hospital, UserRound, Sparkles, RefreshCcw, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -14,17 +14,22 @@ export default function Results({ scan, onReset }) {
   const [advice, setAdvice] = useState(null);
   const [loadingAdvice, setLoadingAdvice] = useState(true);
   const [adviceError, setAdviceError] = useState(null);
+  const requestIdRef = useRef(0);
 
   const loadAdvice = async () => {
+    const myId = ++requestIdRef.current;
     try {
       setLoadingAdvice(true);
       setAdviceError(null);
       const data = await fetchAdvice(scan);
+      if (requestIdRef.current !== myId) return; // stale
       setAdvice(data);
+      setAdviceError(null);
     } catch (err) {
+      if (requestIdRef.current !== myId) return; // stale
       setAdviceError(err?.response?.data?.detail || "Could not fetch guidance.");
     } finally {
-      setLoadingAdvice(false);
+      if (requestIdRef.current === myId) setLoadingAdvice(false);
     }
   };
 
@@ -102,7 +107,7 @@ export default function Results({ scan, onReset }) {
           </div>
         )}
 
-        {adviceError && (
+        {adviceError && !advice && (
           <div data-testid="advice-error" className="mt-10 flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-5 text-sm">
             <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
             <div>

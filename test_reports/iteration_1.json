@@ -1,0 +1,40 @@
+{
+  "summary": "First-finish smoke pass on NeuroCare MRI app. Backend: all 8 critical endpoints pass including real GPT-6-Sol advice call via emergentintegrations. Frontend: full E2E flow (home -> upload JPG -> location -> analyze -> results dashboard with all advice cards -> reset) works. /about and /downloads pages work.",
+  "tested_scope": ["backend", "frontend", "integration"],
+  "passed": [
+    "GET /api/ -> {status:ok}",
+    "GET /api/model-status -> demo_mode:true, classes=[no_tumor,glioma,meningioma,pituitary]",
+    "POST /api/predict (multipart mri+location) -> 200 with id, tumor_detected, tumor_type, confidence, class_probabilities(4 keys summing ~1), demo_mode:true, filename, location",
+    "POST /api/predict with non-image (text/plain) -> 400 as expected",
+    "POST /api/advice -> 200 with all required keys: tumor_info{name,overview,common_symptoms,severity_note}, next_steps, nearby_hospitals(4), recommended_specialists(3), emergency_contacts(3), mindset_tips(3), disclaimer. Real OpenAI GPT-6-Sol call succeeded.",
+    "GET /api/scans/{scan_id} returns stored scan with advice populated after /api/advice",
+    "GET /api/downloads lists README.md and sample_mri_info.txt",
+    "GET /api/downloads/README.md returns 200 with content-type text/markdown",
+    "Home page loads, header shows NeuroCare brand + Scan / About PINN / Downloads links",
+    "'Start a scan' button scrolls to uploader (dropzone visible)",
+    "Upload JPG + location + Analyse scan -> results-section shown with demo-mode-banner",
+    "Results dashboard shows all 4 class probability bars and all cards: hospitals-card, emergency-card, specialists-card, next-steps-card, mindset-card, reset-button",
+    "'New scan' / reset-button returns user back to uploader (dropzone visible)",
+    "/about page loads and mentions demo mode",
+    "/downloads page lists README.md and sample_mri_info.txt"
+  ],
+  "failed": [
+    {
+      "area": "Frontend Results (advice fetch)",
+      "issue": "Intermittent 'We couldn't load the guidance' Cloudflare 520-style error banner stays visible even after advice successfully loads (hospitals/emergency/etc. cards do render below the error). Suggests the error state is not cleared on successful retry, or an initial advice request timed out at the edge and a retry succeeded without clearing the error.",
+      "evidence": "Screenshot /tmp/results2.png shows red 'We couldn't load the guidance. The origin web server returned an invalid or incomplete response to Cloudflare...' banner with 'Try again' button, while all advice cards are present below it.",
+      "priority": "MEDIUM"
+    }
+  ],
+  "action_items": [
+    "In Results.jsx (or wherever advice state is held), clear the error state when the advice fetch eventually resolves successfully, so the stale error banner is removed once hospitals/emergency/etc. are rendered.",
+    "Consider adding a client-side timeout extension or an automatic single retry for /api/advice since the LLM response can take 20-40s and the edge proxy may 520 occasionally."
+  ],
+  "success_rate": {"backend": "100%", "frontend": "95%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": {
+    "mocked_apis": "PINN prediction is MOCKED (demo_mode:true) until user drops trained model into /app/backend/models/. /api/advice uses REAL OpenAI GPT-6-Sol via EMERGENT_LLM_KEY.",
+    "test_credentials": "No auth in app; /app/memory/test_credentials.md not required."
+  }
+}
