@@ -1,0 +1,28 @@
+{
+  "summary": "Tested Emergent Google auth integration (optional sign-in) + My Scans. Backend 10/11 pytest pass: /auth/me (401 unauth, 200 via Bearer & cookie, no _id), /my-scans (401 unauth, per-user isolation, newest first), /predict attaches user_id when authed and null when anonymous, /auth/session bogus -> 401, cookie logout deletes session + clears cookie, CORS echoes origin with credentials=true. Only failure: logout with Bearer header doesn't delete session. Frontend all flows pass: unauth header Sign in + My Scans nav, /history signin prompt, Sign in redirects to https://auth.emergentagent.com/?redirect=<origin>%2Fhistory, bogus #session_id -> error toast + navigate to / (no hang), cookie-auth shows avatar+logout and 'Hello, Test.', empty state then new scan appears in history-list after scan on /, logout restores Sign in and persists after reload. Anonymous scan regression OK with all advice cards, no stale advice-error.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/auth/logout", "issue": "Only reads session_token cookie; Authorization: Bearer token is ignored, so session is not deleted for header-based clients (subsequent /auth/me still 200). Frontend uses cookie so UI unaffected."},
+      {"endpoint": "GET /api/scans/{scan_id}, POST /api/advice", "issue": "No ownership check: anyone with a scan id can read another user's scan (incl. user_id, advice) or overwrite its advice. Consider restricting scans with user_id to owner."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": ["/app/backend/tests/test_auth_scans.py", "/app/test_reports/pytest/pytest_results_iter2.xml"],
+  "action_items": [
+    "In /api/auth/logout, fall back to Authorization Bearer token (same as get_optional_user) when cookie missing",
+    "Optional: enforce ownership on /api/scans/{id} and /api/advice for scans having a user_id"
+  ],
+  "critical_code_review_comments": [
+    "create_session: data['email']/data['name'] KeyError would 500 if Emergent response shape changes; use .get with validation",
+    "Logout token extraction duplicated vs get_optional_user — extract a _get_token(request) helper",
+    "Home hero text says 'Private · No account needed' — fine, but could mention optional sign-in to save history"
+  ],
+  "updated_files": ["/app/backend/tests/test_auth_scans.py"],
+  "success_rate": {"backend": "91% (10/11)", "frontend": "100%"},
+  "test_credentials": "No passwords; test sessions created via mongosh per /app/auth_testing.md (test_credentials.md present and correct).",
+  "seed_data_creation": "Created temporary test users/sessions/scans (test-user-*, test_session_*) and deleted them after testing. Pre-existing test-user-1 left untouched.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run pytest /app/backend/tests/test_auth_scans.py (creates own sessions via mongosh). Browser auth: add session_token cookie for domain tumour-mri-check.preview.emergentagent.com. /api/advice takes ~20-40s."
+}

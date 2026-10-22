@@ -88,12 +88,17 @@ EMERGENT_SESSION_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/
 SESSION_DAYS = 7
 
 
-async def get_optional_user(request: Request) -> Optional[User]:
+def _get_token(request: Request) -> Optional[str]:
     token = request.cookies.get("session_token")
     if not token:
         auth = request.headers.get("Authorization", "")
         if auth.startswith("Bearer "):
             token = auth[7:]
+    return token
+
+
+async def get_optional_user(request: Request) -> Optional[User]:
+    token = _get_token(request)
     if not token:
         return None
     session = await db.user_sessions.find_one({"session_token": token}, {"_id": 0})
@@ -165,7 +170,7 @@ async def auth_me(request: Request):
 
 @api_router.post("/auth/logout")
 async def logout(request: Request, response: Response):
-    token = request.cookies.get("session_token")
+    token = _get_token(request)
     if token:
         await db.user_sessions.delete_one({"session_token": token})
     response.delete_cookie("session_token", path="/", secure=True, samesite="none")
@@ -285,8 +290,20 @@ Please respond ONLY with a valid JSON object (no markdown, no code fences) with 
 Use the patient's provided location to tailor hospital names and emergency numbers to the correct country. If location is unknown, give widely-known international options and clearly say so in notes. Keep tone warm, hopeful, and empowering."""
 
 
+async def _get_owned_scan(scan_id: str, request: Request) -> dict:
+    doc = await db.scans.find_one({"id": scan_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Scan not found.")
+    if doc.get("user_id"):
+        user = await get_optional_user(request)
+        if not user or user.user_id != doc["user_id"]:
+            raise HTTPException(status_code=404, detail="Scan not found.")
+    return doc
+
+
 @api_router.post("/advice")
-async def advice(req: AdviceRequest):
+async def advice(req: AdviceRequest, request: Request):
+    await _get_owned_scan(req.scan_id, request)
     if not EMERGENT_LLM_KEY:
         raise HTTPException(status_code=500, detail="LLM key not configured.")
 
@@ -321,11 +338,8 @@ async def advice(req: AdviceRequest):
 
 
 @api_router.get("/scans/{scan_id}")
-async def get_scan(scan_id: str):
-    doc = await db.scans.find_one({"id": scan_id}, {"_id": 0})
-    if not doc:
-        raise HTTPException(status_code=404, detail="Scan not found.")
-    return doc
+async def get_scan(scan_id: str, request: Request):
+    return await _get_owned_scan(scan_id, request)
 
 
 # -----------------------------------------------------------------------------

@@ -25,8 +25,14 @@ Web app for MRI Brain tumor detection. User's PINN model will be dropped into th
 - Calm UI with hero, breathing loader, bento results dashboard, emergency card, mindset card
 - PINN integration folder with README + commented loader templates (PyTorch/TF/ONNX)
 
+## Implemented — Iteration 2 (Google Sign-in)
+- Emergent-managed Google sign-in (optional; anonymous scanning still works)
+- /api/auth/session, /api/auth/me, /api/auth/logout (cookie or Bearer), httpOnly 7-day session cookie
+- Scans attached to user_id when signed in; /api/my-scans + /history "My Scans" page
+- Ownership check on /api/scans/{id} and /api/advice for scans with a user_id
+- CORS echoes origin with credentials
+
 ## Backlog
-- **P1**: Save & resume past scans (local history list)
 - **P1**: Google Places integration for real nearby hospitals (optional, requires API key)
 - **P2**: PDF report export of results
 - **P2**: Mobile camera capture for MRI
