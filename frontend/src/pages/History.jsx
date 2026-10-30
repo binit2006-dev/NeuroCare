@@ -20,7 +20,7 @@ function SignInPrompt({ login }) {
 
 function ScanCard({ s }) {
   const { t, lang } = useLang();
-  const advice = (lang === "hi" && s.advice_hi) || s.advice;
+  const advice = lang === "hi" ? s.advice_hi || s.advice : s.advice || s.advice_hi;
   return (
     <li data-testid={`history-item-${s.id}`} className="rounded-xl bg-white border border-border p-5 hover:border-primary/40 hover:-translate-y-0.5">
       <div className="text-xs text-muted-foreground">{new Date(s.created_at).toLocaleString(lang === "hi" ? "hi-IN" : undefined)}</div>

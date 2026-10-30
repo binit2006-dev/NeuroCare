@@ -305,6 +305,7 @@ HINDI_INSTRUCTION = (
     "The disclaimer must also be in Hindi."
 )
 ADVICE_FIELD = {"en": "advice", "hi": "advice_hi"}
+_advice_locks: dict = {}
 
 
 async def _get_owned_scan(scan_id: str, request: Request) -> dict:
@@ -320,7 +321,19 @@ async def _get_owned_scan(scan_id: str, request: Request) -> dict:
 
 @api_router.post("/advice")
 async def advice(req: AdviceRequest, request: Request):
-    scan = await _get_owned_scan(req.scan_id, request)
+    await _get_owned_scan(req.scan_id, request)
+    key = (req.scan_id, req.language)
+    lock = _advice_locks.setdefault(key, asyncio.Lock())
+    try:
+        async with lock:
+            return await _generate_advice(req)
+    finally:
+        if not lock.locked():
+            _advice_locks.pop(key, None)
+
+
+async def _generate_advice(req: AdviceRequest):
+    scan = await db.scans.find_one({"id": req.scan_id}, {"_id": 0})
     field = ADVICE_FIELD[req.language]
     if scan.get(field):
         return scan[field]

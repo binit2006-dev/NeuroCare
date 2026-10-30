@@ -61,6 +61,7 @@ export default function Downloads() {
                   <a
                     href={downloadUrl(f.name)}
                     download
+                    data-testid={`download-link-${f.name}`}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm hover:bg-[#3a6347]"
                   >
                     <Download className="w-4 h-4" /> {t("dl_get")}

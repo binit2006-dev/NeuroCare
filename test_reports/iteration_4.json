@@ -1,0 +1,42 @@
+{
+  "summary": "Hindi Mode testing. Backend: the new test_hindi_advice.py passes 8/8. /api/advice language='hi' returns the same keys with Devanagari values and stores them in scans.advice_hi (advice is separate). The second call for the same language takes under 3s (cached). A request with no language field defaults to en. language='fr' returns 422. An anonymous request for an owned scan returns 404. Regression suites: 18/19 pass. The one failure is the known glioma_tumor_1 -> meningioma misclassification from iteration 3. Frontend: the toggle shows 'हिंदी' in English mode and 'English' in Hindi mode. html lang switches to 'hi', and localStorage neurocare_lang persists across reload. The hero, uploader (placeholder 'जैसे मुंबई, 400001', analyze button), nav (testids unchanged), sign-in 'साइन इन', footer, /history signed-out prompt, /about including the model-status labels, and /downloads ('लें' buttons) all render in Hindi. Hindi scan flow with pituitary_tumor_5: verdict 'पिट्यूटरी (संभावित)', class bars and heatmap text in Hindi, all 7 advice cards in Devanagari in about 18s. Toggling to EN re-fetched advice in about 12s. Toggling back to HI took 0.35s (cached). After 3 rapid toggles the final state matched the final language, with no stale advice. Signed-in /history in Hindi shows 'नमस्ते, Priya.', hi-IN date format and the Hindi overview. Logout works.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/advice", "issue": "No in-flight dedupe. Two concurrent uncached requests for the same scan+language both call GPT, and the last write wins. On first load in dev (StrictMode double effect) two 'hi' requests went out. This wastes cost and latency."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Layout header (mobile 390px)", "issue": "The header nav overflows horizontally (scrollWidth 576-608 vs 390). The language-toggle (x=447) and the sign-in button (x=525) are off-screen in both EN and HI. Mobile users cannot easily reach the one-click Hindi switch. Nav labels also wrap onto 2-3 lines.", "selector": "[data-testid='language-toggle'], [data-testid='google-signin-button']", "priority": "HIGH"}
+    ],
+    "integration_issues": [
+      {"flow": "Language switch on results", "issue": "While new-language advice loads (about 12-20s), the old-language advice cards stay visible under the loader. Once loading finishes the content is correct. Consider dimming or hiding the old cards during the switch.", "affected_selectors": ["[data-testid='advice-loading']", "[data-testid='tumor-info-card']"]},
+      {"flow": "History in EN mode", "issue": "A scan analysed only in Hindi (advice_hi only) shows no overview in EN mode, because ScanCard only falls back from hi to en and not from en to hi.", "affected_selectors": ["[data-testid^='history-item-']"]}
+    ],
+    "design_issues": [
+      {"screen": "All pages in Hindi", "issues": ["Small uppercase labels with tracking-[0.2em] (e.g. 'चरण 1 / 2', 'डाउनलोड', 'इस परिणाम के बारे में', 'ट्यूमर हीटमैप', 'आपातकालीन संपर्क') get letter-spacing that breaks Devanagari matras and conjuncts into separated glyphs. Use tracking-normal when lang==='hi' (e.g. :lang(hi) .tracking-\\[0\\.2em\\] { letter-spacing: 0 })."]},
+      {"screen": "/downloads", "issue_note": "The 'Get/लें' anchor has no data-testid.", "issues": ["Missing data-testid on the download link"]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_hindi_advice.py", "/app/test_reports/pytest/pytest_hindi.xml", "/app/test_reports/pytest/pytest_regression.xml"],
+  "action_items": [
+    "Make the header responsive on mobile (hamburger menu or a compact nav) so the language-toggle and sign-in stay visible at 390px",
+    "Remove the wide letter-spacing on Devanagari text in Hindi mode (:lang(hi) override)",
+    "Optional: hide or dim stale advice cards while the other language loads",
+    "Optional: in ScanCard fall back to advice_hi when advice is missing in EN mode",
+    "Optional: dedupe concurrent /api/advice LLM calls per scan+language",
+    "Add data-testid to the download 'Get' link"
+  ],
+  "critical_code_review_comments": [
+    "Results.jsx: on an advice error after a language switch, the old advice is kept and the error is hidden (adviceError && !advice), so the user sees old-language content with no error message",
+    "server.py /api/advice: there is no lock or in-flight cache, so duplicate GPT calls are possible",
+    "Downloads.jsx: the <a> download link is missing a data-testid"
+  ],
+  "updated_files": ["/app/backend/tests/test_hindi_advice.py"],
+  "success_rate": {"backend": "100% Hindi features (8/8); regression 18/19 (known model accuracy)", "frontend": "95% (all Hindi flows work; mobile header overflow)"},
+  "seed_data_creation": "Test users and sessions were created via mongosh; all users, sessions and scans were cleaned up afterwards",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Hindi mode works end to end. Remaining work is mobile header overflow, Devanagari letter-spacing and minor UX items. Run pytest tests/test_hindi_advice.py; it makes real GPT calls and takes about 35s."
+}

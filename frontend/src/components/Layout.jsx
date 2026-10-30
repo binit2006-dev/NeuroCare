@@ -12,6 +12,24 @@ const nav = [
   { to: "/downloads", key: "nav_downloads", id: "downloads" },
 ];
 
+function NavLinks({ prefix, t }) {
+  return nav.map((n) => (
+    <NavLink
+      key={n.to}
+      to={n.to}
+      data-testid={`${prefix}-${n.id}`}
+      className={({ isActive }) =>
+        `px-3 lg:px-4 py-2 rounded-full text-sm whitespace-nowrap hover:bg-primary/10 ${
+          isActive ? "bg-primary/10 text-primary" : "text-foreground/80"
+        }`
+      }
+      end={n.to === "/"}
+    >
+      {t(n.key)}
+    </NavLink>
+  ));
+}
+
 export default function Layout() {
   const { pathname } = useLocation();
   const { t } = useLang();
@@ -23,8 +41,8 @@ export default function Layout() {
         data-testid="site-header"
         className="sticky top-0 z-40 bg-[#FDFBF7]/75 backdrop-blur-xl border-b border-border/60"
       >
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
-          <Link to="/" data-testid="brand-link" className="flex items-center gap-2.5 group">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 h-16 flex items-center justify-between gap-3">
+          <Link to="/" data-testid="brand-link" className="flex items-center gap-2.5 group flex-shrink-0">
             <span className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center group-hover:bg-primary/15">
               <Brain className="w-5 h-5 text-primary" strokeWidth={1.75} />
             </span>
@@ -32,26 +50,17 @@ export default function Layout() {
               Neuro<span className="text-primary">Care</span>
             </span>
           </Link>
-          <nav className="flex items-center gap-1 sm:gap-2">
-            {nav.map((n) => (
-              <NavLink
-                key={n.to}
-                to={n.to}
-                data-testid={`nav-${n.id}`}
-                className={({ isActive }) =>
-                  `px-3 sm:px-4 py-2 rounded-full text-sm hover:bg-primary/10 ${
-                    isActive ? "bg-primary/10 text-primary" : "text-foreground/80"
-                  }`
-                }
-                end={n.to === "/"}
-              >
-                {t(n.key)}
-              </NavLink>
-            ))}
+          <nav className="hidden md:flex items-center gap-2">
+            <NavLinks prefix="nav" t={t} />
+          </nav>
+          <div className="flex items-center gap-2 flex-shrink-0">
             <LanguageToggle />
             <UserMenu />
-          </nav>
+          </div>
         </div>
+        <nav className="md:hidden flex items-center gap-1 overflow-x-auto px-3 pb-2 -mt-1">
+          <NavLinks prefix="mobile-nav" t={t} />
+        </nav>
       </header>
 
       <main className="flex-1">

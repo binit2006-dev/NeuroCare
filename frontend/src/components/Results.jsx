@@ -105,7 +105,7 @@ export default function Results({ scan, onReset }) {
           </div>
         )}
 
-        {adviceError && !advice && (
+        {adviceError && (
           <div data-testid="advice-error" className="mt-10 flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-5 text-sm">
             <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
             <div>
@@ -119,7 +119,7 @@ export default function Results({ scan, onReset }) {
         )}
 
         {advice && (
-          <div className="mt-12 grid lg:grid-cols-12 gap-6">
+          <div data-testid="advice-grid" className={`mt-12 grid lg:grid-cols-12 gap-6 transition-opacity duration-300 ${loadingAdvice || adviceError ? "opacity-30 pointer-events-none" : ""}`}>
             {/* Tumor info */}
             <div data-testid="tumor-info-card" className="lg:col-span-7 bg-white rounded-2xl border border-border p-7">
               <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-primary">
