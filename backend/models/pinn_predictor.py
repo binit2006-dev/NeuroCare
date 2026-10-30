@@ -89,7 +89,7 @@ def _build_model():
 
     torch.set_num_threads(2)
     model = ImprovedPINNCNN(len(TUMOR_CLASSES))
-    model.load_state_dict(torch.load(MODEL_FILE, map_location="cpu"))
+    model.load_state_dict(torch.load(MODEL_FILE, map_location="cpu", weights_only=True))
     model.eval()
     return model
 

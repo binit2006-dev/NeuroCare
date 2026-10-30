@@ -1,113 +1,181 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#000000" />
-        <meta name="description" content="A product of emergent.sh" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet" />
-        <!--
-        manifest.json provides metadata used when your web app is installed on a
-        user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-        -->
-        <!--
-        Notice the use of %PUBLIC_URL% in the tags above.
-        It will be replaced with the URL of the `public` folder during the build.
-        Only files inside the `public` folder can be referenced from the HTML.
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#4A7C59" />
+  <title>NeuroCare — calm MRI brain tumor analysis</title>
+  <meta name="description" content="Upload a brain MRI, get a PINN model prediction, a tumor heatmap and gentle AI guidance in English or Hindi." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@300;400;500;600&family=Noto+Sans+Devanagari:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header" data-testid="site-header">
+    <div class="container header-row">
+      <a href="#/" class="brand" data-testid="brand-link">
+        <span class="brand-mark"><i data-lucide="brain"></i></span>
+        <span class="brand-name">Neuro<span>Care</span></span>
+      </a>
+      <nav class="nav nav-desktop" data-nav="nav"></nav>
+      <div class="header-actions">
+        <button class="lang-toggle" data-testid="language-toggle" type="button">
+          <i data-lucide="languages"></i><span data-i18n="lang_switch"></span>
+        </button>
+        <div id="user-menu" class="user-menu"></div>
+      </div>
+    </div>
+    <nav class="nav nav-mobile container" data-nav="mobile-nav"></nav>
+  </header>
 
-        Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-        work correctly both with client-side routing and a non-root public URL.
-        Learn how to configure a non-root public URL by running `npm run build`.
-        -->
-        <title>Emergent | Fullstack App</title>
-        <script>window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);</script>
-        <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
-    </head>
-    <body>
-        <noscript>You need to enable JavaScript to run this app.</noscript>
-        <div id="root"></div>
-        <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+  <main>
+    <!-- HOME: hero + uploader -->
+    <section id="view-home" class="view">
+      <div class="hero" data-testid="hero-section">
+        <div class="blob blob-a"></div><div class="blob blob-b"></div><div class="blob blob-c"></div>
+        <div class="container hero-grid">
+          <div class="hero-copy reveal">
+            <span class="tag" data-testid="hero-tag"><i data-lucide="sparkles"></i><span data-i18n="hero_tag"></span></span>
+            <h1 class="display" data-testid="hero-title">
+              <span data-i18n="hero_title_1"></span><br />
+              <span class="accent" data-i18n="hero_title_2"></span>
+            </h1>
+            <p class="lead" data-i18n="hero_sub"></p>
+            <div class="hero-actions">
+              <button class="btn btn-primary" data-testid="hero-cta-start" id="hero-cta" type="button">
+                <span data-i18n="hero_cta"></span><i data-lucide="arrow-down"></i>
+              </button>
+              <span class="muted small"><span class="dots"><i></i><i></i><i></i></span><span data-i18n="hero_private"></span></span>
+            </div>
+          </div>
+          <div class="hero-art reveal" style="animation-delay:.15s">
+            <div class="hero-img"><img src="https://images.unsplash.com/photo-1761888856976-c4bc8303f65f?crop=entropy&cs=srgb&fm=jpg&q=85&w=800" alt="Soft calming abstract" /></div>
+            <div class="float-card float-left">
+              <div class="eyebrow-sm" data-i18n="hero_model"></div>
+              <div class="strong" data-i18n="hero_model_name"></div>
+              <div class="muted xs" data-i18n="hero_model_classes"></div>
+            </div>
+            <div class="float-card float-right">
+              <div class="xs" style="opacity:.8" data-i18n="hero_powered"></div>
+              <div class="strong">GPT 6.1 Sol</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+      <section id="scan" class="section" data-testid="uploader-section">
+        <div class="container narrow">
+          <p class="eyebrow" data-i18n="up_step"></p>
+          <h2 class="h2" data-i18n="up_title"></h2>
+          <p class="muted" data-i18n="up_sub"></p>
+          <div class="upload-grid">
+            <label class="dropzone" id="dropzone" data-testid="dropzone">
+              <input id="file-input" data-testid="file-input" type="file" accept="image/*" hidden />
+              <div id="drop-empty" class="drop-empty">
+                <span class="icon-circle"><i data-lucide="upload"></i></span>
+                <p class="strong" data-i18n="up_drop"></p>
+                <p class="muted small" data-i18n="up_browse"></p>
+              </div>
+              <div id="drop-preview" class="drop-preview" hidden>
+                <img id="preview-img" alt="MRI preview" />
+                <button type="button" class="icon-btn clear-btn" id="clear-file" data-testid="clear-file-button" aria-label="Remove"><i data-lucide="x"></i></button>
+                <p class="muted small" id="file-name"></p>
+              </div>
+            </label>
+            <div class="upload-side">
+              <label class="field-label" for="location-input"><i data-lucide="map-pin"></i><span data-i18n="up_location"></span></label>
+              <input id="location-input" data-testid="location-input" class="input" maxlength="120" data-i18n-placeholder="up_location_ph" />
+              <p class="muted xs" data-i18n="up_location_help"></p>
+              <button class="btn btn-primary btn-block" id="analyze-button" data-testid="analyze-button" type="button" disabled>
+                <span data-i18n="up_analyze"></span>
+              </button>
+              <div class="note"><strong data-i18n="up_reassure_bold"></strong> <span data-i18n="up_reassure"></span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-        <script>
-            !(function (t, e) {
-                var o, n, p, r;
-                e.__SV ||
-                    ((window.posthog = e),
-                    (e._i = []),
-                    (e.init = function (i, s, a) {
-                        function g(t, e) {
-                            var o = e.split(".");
-                            2 == o.length && ((t = t[o[0]]), (e = o[1])),
-                                (t[e] = function () {
-                                    t.push(
-                                        [e].concat(
-                                            Array.prototype.slice.call(
-                                                arguments,
-                                                0,
-                                            ),
-                                        ),
-                                    );
-                                });
-                        }
-                        ((p = t.createElement("script")).type =
-                            "text/javascript"),
-                            (p.crossOrigin = "anonymous"),
-                            (p.async = !0),
-                            (p.src =
-                                s.api_host.replace(
-                                    ".i.posthog.com",
-                                    "-assets.i.posthog.com",
-                                ) + "/static/array.js"),
-                            (r =
-                                t.getElementsByTagName(
-                                    "script",
-                                )[0]).parentNode.insertBefore(p, r);
-                        var u = e;
-                        for (
-                            void 0 !== a ? (u = e[a] = []) : (a = "posthog"),
-                                u.people = u.people || [],
-                                u.toString = function (t) {
-                                    var e = "posthog";
-                                    return (
-                                        "posthog" !== a && (e += "." + a),
-                                        t || (e += " (stub)"),
-                                        e
-                                    );
-                                },
-                                u.people.toString = function () {
-                                    return u.toString(1) + ".people (stub)";
-                                },
-                                o =
-                                    "init me ws ys ps bs capture je Di ks register register_once register_for_session unregister unregister_for_session Ps getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty Es $s createPersonProfile Is opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing Ss debug xs getPageViewId captureTraceFeedback captureTraceMetric".split(
-                                        " ",
-                                    ),
-                                n = 0;
-                            n < o.length;
-                            n++
-                        )
-                            g(u, o[n]);
-                        e._i.push([i, s, a]);
-                    }),
-                    (e.__SV = 1));
-            })(document, window.posthog || []);
-            posthog.init("phc_DbsPb39SRc8z3EiQ6Dhj6ikv4H4rTKcht9d4sZSesceP", {
-                api_host: "https://ap.emergent.sh",
-                person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well,
-                session_recording: {
-                    recordCrossOriginIframes: true,
-                    capturePerformance: false,
-                },
-            });
-        </script>
-    </body>
+    <!-- LOADING -->
+    <section id="view-loading" class="view section" data-testid="breathing-loader" hidden>
+      <div class="container center">
+        <div class="breath"><i></i><i></i><i></i><i></i></div>
+        <h3 class="h3" data-i18n="loader_label"></h3>
+        <p class="muted" data-i18n="loader_sub"></p>
+      </div>
+    </section>
+
+    <!-- RESULTS (rendered by scan.js) -->
+    <section id="view-results" class="view section" data-testid="results-section" hidden>
+      <div class="container" id="results-root"></div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="view-history" class="view section" hidden>
+      <div class="container narrow">
+        <p class="eyebrow"><i data-lucide="history"></i><span data-i18n="hist_small"></span></p>
+        <h1 class="display-sm" id="history-title"></h1>
+        <div id="history-root" class="mt-lg"></div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="view-about" class="view section" hidden>
+      <div class="container narrow">
+        <p class="eyebrow" data-i18n="about_small"></p>
+        <h1 class="display-sm"><span data-i18n="about_title_1"></span> <span class="accent" data-i18n="about_title_2"></span></h1>
+        <p class="lead" data-i18n="about_intro"></p>
+      </div>
+      <div class="container feature-grid">
+        <div class="card"><i data-lucide="atom" class="ico"></i><div class="strong" data-i18n="f1_title"></div><p class="muted small" data-i18n="f1_text"></p></div>
+        <div class="card"><i data-lucide="database" class="ico"></i><div class="strong" data-i18n="f2_title"></div><p class="muted small" data-i18n="f2_text"></p></div>
+        <div class="card"><i data-lucide="shield" class="ico"></i><div class="strong" data-i18n="f3_title"></div><p class="muted small" data-i18n="f3_text"></p></div>
+      </div>
+      <div class="container narrow">
+        <div class="card split">
+          <img class="split-img" src="https://images.unsplash.com/photo-1761888857230-1659946aaa8b?crop=entropy&cs=srgb&fm=jpg&q=85&w=800" alt="Abstract blue waves representing AI" />
+          <div class="split-body">
+            <p class="eyebrow"><i data-lucide="folder-open"></i><span data-i18n="plug_small"></span></p>
+            <h2 class="h2" data-i18n="plug_title"></h2>
+            <ol class="steps">
+              <li><span class="num">1</span><div><span data-i18n="plug_1"></span> <code>backend/models/</code></div></li>
+              <li><span class="num">2</span><div><span data-i18n="plug_2"></span> <code>pinn_model.pth</code></div></li>
+              <li><span class="num">3</span><div><span data-i18n="plug_3"></span> <code>pinn_predictor.py</code></div></li>
+            </ol>
+            <div class="status-box">
+              <div class="strong"><i data-lucide="sparkles"></i> <span data-i18n="status_title"></span></div>
+              <div id="model-status" data-testid="model-status" class="status-grid"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOWNLOADS -->
+    <section id="view-downloads" class="view section" hidden>
+      <div class="container narrow">
+        <p class="eyebrow" data-i18n="dl_small"></p>
+        <h1 class="display-sm"><span data-i18n="dl_title_1"></span> <span class="accent" data-i18n="dl_title_2"></span></h1>
+        <p class="lead"><span data-i18n="dl_sub_1"></span> <code>backend/downloads/</code> <span data-i18n="dl_sub_2"></span></p>
+        <ul id="downloads-list" class="dl-grid" data-testid="downloads-list"></ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" data-testid="site-footer">
+    <div class="container footer-row">
+      <p>&copy; <span id="year"></span> NeuroCare. <span data-i18n="footer_disclaimer"></span></p>
+      <p class="xs" data-i18n="footer_built"></p>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" data-testid="toast"></div>
+
+  <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/scan.js"></script>
+  <script src="/js/pages.js"></script>
+</body>
 </html>
