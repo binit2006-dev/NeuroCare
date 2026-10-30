@@ -1,8 +1,10 @@
 import { LogIn, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useLang } from "@/context/LanguageContext";
 
 export default function UserMenu() {
   const { user, loading, login, logout } = useAuth();
+  const { t } = useLang();
   if (loading) return <div className="w-24 h-9" />;
 
   if (!user) {
@@ -12,7 +14,7 @@ export default function UserMenu() {
         onClick={login}
         className="ml-1 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm hover:bg-[#3a6347] hover:-translate-y-[1px]"
       >
-        <LogIn className="w-4 h-4" /> Sign in
+        <LogIn className="w-4 h-4" /> {t("sign_in")}
       </button>
     );
   }
@@ -29,7 +31,7 @@ export default function UserMenu() {
       <button
         data-testid="logout-button"
         onClick={logout}
-        aria-label="Sign out"
+        aria-label={t("sign_out")}
         className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-primary/10 text-foreground/70"
       >
         <LogOut className="w-4 h-4" />

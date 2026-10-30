@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import Layout from "@/components/Layout";
 import AuthCallback from "@/components/AuthCallback";
 import { AuthProvider } from "@/context/AuthContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import Home from "@/pages/Home";
 import About from "@/pages/About";
 import Downloads from "@/pages/Downloads";
@@ -27,10 +28,12 @@ function AppRouter() {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppRouter />
-        <Toaster position="bottom-center" richColors />
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <AppRouter />
+          <Toaster position="bottom-center" richColors />
+        </AuthProvider>
+      </LanguageProvider>
     </BrowserRouter>
   );
 }

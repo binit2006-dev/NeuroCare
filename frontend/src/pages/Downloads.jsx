@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchDownloads, downloadUrl } from "@/lib/api";
 import { Download, FileText, Image as ImageIcon, File as FileIcon } from "lucide-react";
+import { useLang } from "@/context/LanguageContext";
 
 const iconFor = (ext) => {
   if (["png", "jpg", "jpeg", "webp"].includes(ext)) return ImageIcon;
@@ -15,28 +16,29 @@ const prettySize = (bytes) => {
 };
 
 export default function Downloads() {
+  const { t } = useLang();
   const [files, setFiles] = useState(null);
   useEffect(() => { fetchDownloads().then(setFiles).catch(() => setFiles([])); }, []);
 
   return (
     <div className="relative">
       <section className="max-w-5xl mx-auto px-6 lg:px-10 pt-20 pb-12">
-        <p className="text-xs uppercase tracking-[0.2em] text-primary font-medium">Downloads</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-primary font-medium">{t("dl_small")}</p>
         <h1 className="mt-4 font-light text-4xl sm:text-5xl lg:text-6xl tracking-tight">
-          Sample scans & <span className="text-primary">resources.</span>
+          {t("dl_title_1")} <span className="text-primary">{t("dl_title_2")}</span>
         </h1>
         <p className="mt-6 text-lg text-muted-foreground max-w-2xl leading-relaxed">
-          Grab test MRI images, templates and documentation. Anything placed in
+          {t("dl_sub_1")}
           <code className="mx-1 px-1.5 py-0.5 rounded bg-muted text-xs">/app/backend/downloads/</code>
-          appears here automatically.
+          {t("dl_sub_2")}
         </p>
       </section>
 
       <section className="max-w-5xl mx-auto px-6 lg:px-10 pb-24">
-        {files === null && <div className="text-muted-foreground">Loading…</div>}
+        {files === null && <div className="text-muted-foreground">{t("loading")}</div>}
         {files && files.length === 0 && (
           <div data-testid="downloads-empty" className="rounded-2xl border border-dashed border-border bg-white p-10 text-center text-muted-foreground">
-            No files yet. Drop sample MRIs into <code className="mx-1 px-1.5 py-0.5 rounded bg-muted text-xs">/app/backend/downloads/</code>.
+            {t("dl_empty")} <code className="mx-1 px-1.5 py-0.5 rounded bg-muted text-xs">/app/backend/downloads/</code>
           </div>
         )}
         {files && files.length > 0 && (
@@ -61,7 +63,7 @@ export default function Downloads() {
                     download
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm hover:bg-[#3a6347]"
                   >
-                    <Download className="w-4 h-4" /> Get
+                    <Download className="w-4 h-4" /> {t("dl_get")}
                   </a>
                 </li>
               );

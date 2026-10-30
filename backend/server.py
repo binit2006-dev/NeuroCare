@@ -13,7 +13,7 @@ import logging
 import uuid
 from pathlib import Path
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, ConfigDict
 from PIL import UnidentifiedImageError
@@ -82,6 +82,7 @@ class AdviceRequest(BaseModel):
     confidence: float
     location: Optional[str] = ""
     tumor_detected: bool
+    language: Literal["en", "hi"] = "en"
 
 
 # -----------------------------------------------------------------------------
@@ -294,7 +295,16 @@ Please respond ONLY with a valid JSON object (no markdown, no code fences) with 
   "disclaimer": "This information is not a medical diagnosis. Please consult a qualified doctor."
 }}
 
-Use the patient's provided location to tailor hospital names and emergency numbers to the correct country. If location is unknown, give widely-known international options and clearly say so in notes. Keep tone warm, hopeful, and empowering."""
+Use the patient's provided location to tailor hospital names and emergency numbers to the correct country. If location is unknown, give widely-known international options and clearly say so in notes. Keep tone warm, hopeful, and empowering.{HINDI_INSTRUCTION if req.language == "hi" else ""}"""
+
+
+HINDI_INSTRUCTION = (
+    "\n\nIMPORTANT: Write every string value in simple, warm, easy-to-read Hindi (Devanagari script) "
+    "that an anxious patient in India can understand. Keep all JSON keys exactly in English as shown. "
+    "Keep phone numbers as digits. Hospital names may stay in their official English names. "
+    "The disclaimer must also be in Hindi."
+)
+ADVICE_FIELD = {"en": "advice", "hi": "advice_hi"}
 
 
 async def _get_owned_scan(scan_id: str, request: Request) -> dict:
@@ -310,13 +320,16 @@ async def _get_owned_scan(scan_id: str, request: Request) -> dict:
 
 @api_router.post("/advice")
 async def advice(req: AdviceRequest, request: Request):
-    await _get_owned_scan(req.scan_id, request)
+    scan = await _get_owned_scan(req.scan_id, request)
+    field = ADVICE_FIELD[req.language]
+    if scan.get(field):
+        return scan[field]
     if not EMERGENT_LLM_KEY:
         raise HTTPException(status_code=500, detail="LLM key not configured.")
 
     chat = LlmChat(
         api_key=EMERGENT_LLM_KEY,
-        session_id=f"advice-{req.scan_id}",
+        session_id=f"advice-{req.scan_id}-{req.language}",
         system_message=(
             "You are a compassionate medical information assistant. You never give a diagnosis; "
             "you provide clear, calm, hopeful educational information and point patients to the "
@@ -340,7 +353,7 @@ async def advice(req: AdviceRequest, request: Request):
             raise HTTPException(status_code=502, detail="LLM response was not valid JSON.")
         parsed = json.loads(match.group(0))
 
-    await db.scans.update_one({"id": req.scan_id}, {"$set": {"advice": parsed}})
+    await db.scans.update_one({"id": req.scan_id}, {"$set": {field: parsed}})
     return parsed
 
 

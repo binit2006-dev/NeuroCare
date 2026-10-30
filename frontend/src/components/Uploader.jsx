@@ -2,8 +2,10 @@ import { useRef, useState } from "react";
 import { Upload, MapPin, X, FileImage } from "lucide-react";
 import { toast } from "sonner";
 import { predictMRI } from "@/lib/api";
+import { useLang } from "@/context/LanguageContext";
 
 export default function Uploader({ onComplete, setLoading }) {
+  const { t } = useLang();
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [location, setLocation] = useState("");
@@ -13,7 +15,7 @@ export default function Uploader({ onComplete, setLoading }) {
   const pick = (f) => {
     if (!f) return;
     if (!f.type.startsWith("image/")) {
-      toast.error("Please choose a JPG or PNG MRI image.");
+      toast.error(t("up_invalid"));
       return;
     }
     setFile(f);
@@ -29,13 +31,13 @@ export default function Uploader({ onComplete, setLoading }) {
   const clear = () => { setFile(null); setPreview(null); };
 
   const submit = async () => {
-    if (!file) { toast.error("Add an MRI image first."); return; }
+    if (!file) { toast.error(t("up_missing")); return; }
     try {
       setLoading(true);
       const scan = await predictMRI(file, location);
       onComplete({ ...scan, preview });
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Analysis failed. Please try again.");
+      toast.error(err?.response?.data?.detail || t("up_failed"));
     } finally {
       setLoading(false);
     }
@@ -45,12 +47,12 @@ export default function Uploader({ onComplete, setLoading }) {
     <section id="scan" data-testid="uploader-section" className="py-20">
       <div className="max-w-5xl mx-auto px-6 lg:px-10">
         <div className="max-w-xl">
-          <p className="text-xs uppercase tracking-[0.2em] text-primary font-medium">Step 1 of 2</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-primary font-medium">{t("up_step")}</p>
           <h2 className="mt-3 font-light text-2xl sm:text-3xl lg:text-4xl tracking-tight">
-            Upload your MRI scan
+            {t("up_title")}
           </h2>
           <p className="mt-3 text-muted-foreground">
-            Drag a JPG or PNG of your brain MRI below. Your file is used only to run the analysis.
+            {t("up_sub")}
           </p>
         </div>
 
@@ -95,8 +97,8 @@ export default function Uploader({ onComplete, setLoading }) {
                   <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                     <Upload className="w-6 h-6 text-primary" strokeWidth={1.75} />
                   </div>
-                  <p className="font-medium">Drop your MRI image here</p>
-                  <p className="text-sm text-muted-foreground mt-1">or click to browse · JPG, PNG</p>
+                  <p className="font-medium">{t("up_drop")}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{t("up_browse")}</p>
                 </>
               )}
             </div>
@@ -105,17 +107,17 @@ export default function Uploader({ onComplete, setLoading }) {
           <div className="lg:col-span-2 flex flex-col gap-5">
             <div>
               <label className="text-sm font-medium flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-primary" /> Your city or pincode
+                <MapPin className="w-4 h-4 text-primary" /> {t("up_location")}
               </label>
               <input
                 data-testid="location-input"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Mumbai, 400001"
+                placeholder={t("up_location_ph")}
                 className="mt-2 w-full px-4 py-3 rounded-md bg-white border border-border focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
               />
               <p className="text-xs text-muted-foreground mt-2">
-                Helps us recommend hospitals and emergency numbers close to you.
+                {t("up_location_help")}
               </p>
             </div>
 
@@ -125,12 +127,11 @@ export default function Uploader({ onComplete, setLoading }) {
               disabled={!file}
               className="w-full py-3.5 rounded-full bg-primary text-primary-foreground font-medium hover:bg-[#3a6347] hover:-translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
-              Analyse scan
+              {t("up_analyze")}
             </button>
 
             <div className="rounded-lg bg-secondary/20 border border-secondary/50 p-4 text-sm text-foreground/80">
-              <strong className="font-medium">You&apos;re in good hands.</strong> This tool is educational.
-              Whatever the result, we&apos;ll walk you through calm, concrete next steps.
+              <strong className="font-medium">{t("up_reassure_bold")}</strong> {t("up_reassure")}
             </div>
           </div>
         </div>

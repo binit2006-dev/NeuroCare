@@ -2,16 +2,19 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { Brain } from "lucide-react";
 import { useEffect } from "react";
 import UserMenu from "@/components/UserMenu";
+import LanguageToggle from "@/components/LanguageToggle";
+import { useLang } from "@/context/LanguageContext";
 
 const nav = [
-  { to: "/", label: "Scan" },
-  { to: "/history", label: "My Scans" },
-  { to: "/about", label: "About PINN" },
-  { to: "/downloads", label: "Downloads" },
+  { to: "/", key: "nav_scan", id: "scan" },
+  { to: "/history", key: "nav_history", id: "my-scans" },
+  { to: "/about", key: "nav_about", id: "about-pinn" },
+  { to: "/downloads", key: "nav_downloads", id: "downloads" },
 ];
 
 export default function Layout() {
   const { pathname } = useLocation();
+  const { t } = useLang();
   useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, [pathname]);
 
   return (
@@ -34,7 +37,7 @@ export default function Layout() {
               <NavLink
                 key={n.to}
                 to={n.to}
-                data-testid={`nav-${n.label.toLowerCase().replace(/\s/g, "-")}`}
+                data-testid={`nav-${n.id}`}
                 className={({ isActive }) =>
                   `px-3 sm:px-4 py-2 rounded-full text-sm hover:bg-primary/10 ${
                     isActive ? "bg-primary/10 text-primary" : "text-foreground/80"
@@ -42,9 +45,10 @@ export default function Layout() {
                 }
                 end={n.to === "/"}
               >
-                {n.label}
+                {t(n.key)}
               </NavLink>
             ))}
+            <LanguageToggle />
             <UserMenu />
           </nav>
         </div>
@@ -56,8 +60,8 @@ export default function Layout() {
 
       <footer data-testid="site-footer" className="border-t border-border/60 mt-24">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} NeuroCare. Educational tool — not a medical diagnosis.</p>
-          <p className="text-xs">Built with a PINN model and OpenAI GPT 6 Sol.</p>
+          <p>&copy; {new Date().getFullYear()} NeuroCare. {t("footer_disclaimer")}</p>
+          <p className="text-xs">{t("footer_built")}</p>
         </div>
       </footer>
     </div>

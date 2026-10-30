@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Flame } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { useLang } from "@/context/LanguageContext";
 
 export default function HeatmapViewer({ scan }) {
+  const { t } = useLang();
   const [show, setShow] = useState(true);
   const [opacity, setOpacity] = useState(85);
   if (!scan.preview || !scan.heatmap) return null;
@@ -27,28 +29,26 @@ export default function HeatmapViewer({ scan }) {
       </div>
       <div className="lg:col-span-6">
         <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-primary">
-          <Flame className="w-4 h-4" /> Tumor heatmap
+          <Flame className="w-4 h-4" /> {t("hm_small")}
         </div>
         <h3 className="mt-3 font-light text-2xl tracking-tight">
-          {highlighted ? "Where the model is looking" : "No region stands out"}
+          {highlighted ? t("hm_title_yes") : t("hm_title_no")}
         </h3>
         <p className="mt-3 text-sm text-foreground/80 leading-relaxed">
-          {highlighted
-            ? "The soft glow shows the area your PINN model's tumor map marks as likely affected tissue. It's a guide for your doctor's conversation, not a precise boundary."
-            : "The model's tumor map didn't highlight any region on this scan. That's a reassuring sign — still share the scan with your doctor for a professional read."}
+          {highlighted ? t("hm_desc_yes") : t("hm_desc_no")}
         </p>
         <div data-testid="tumor-area-pct" className="mt-5 inline-flex items-baseline gap-2 rounded-lg bg-secondary/25 px-4 py-2">
           <span className="text-2xl font-light">{area.toFixed(1)}%</span>
-          <span className="text-xs text-muted-foreground">of the scan highlighted</span>
+          <span className="text-xs text-muted-foreground">{t("hm_area")}</span>
         </div>
         <div className="mt-6 space-y-4">
           <label className="flex items-center justify-between gap-4 text-sm">
-            <span>Show glow overlay</span>
+            <span>{t("hm_show")}</span>
             <Switch data-testid="heatmap-toggle" checked={show} onCheckedChange={setShow} />
           </label>
           <div className={show ? "" : "opacity-40 pointer-events-none"}>
             <div className="flex justify-between text-sm mb-2">
-              <span>Glow intensity</span>
+              <span>{t("hm_intensity")}</span>
               <span className="text-muted-foreground">{opacity}%</span>
             </div>
             <Slider data-testid="heatmap-opacity-slider" value={[opacity]} min={10} max={100} step={5} onValueChange={(v) => setOpacity(v[0])} />

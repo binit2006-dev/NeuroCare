@@ -51,5 +51,6 @@ a, button {
 }
 
 /* Headings use Outfit, body uses DM Sans (varied, not Inter) */
-h1, h2, h3, h4 { font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.01em; }
-body { font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif; }
+h1, h2, h3, h4 { font-family: 'Outfit', 'Noto Sans Devanagari', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.01em; }
+body { font-family: 'DM Sans', 'Noto Sans Devanagari', ui-sans-serif, system-ui, sans-serif; }
+html[lang="hi"] h1, html[lang="hi"] h2, html[lang="hi"] h3 { letter-spacing: 0; line-height: 1.3; }

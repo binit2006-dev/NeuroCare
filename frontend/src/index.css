@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* NeuroCare fonts: Outfit for display, DM Sans for body */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@300;400;500;600&display=swap');
 
 @layer base {
     :root {

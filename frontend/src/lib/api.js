@@ -33,13 +33,14 @@ export async function predictMRI(file, location) {
   return data;
 }
 
-export async function fetchAdvice(scan) {
+export async function fetchAdvice(scan, language = "en") {
   const { data } = await api.post("/advice", {
     scan_id: scan.id,
     tumor_type: scan.tumor_type,
     confidence: scan.confidence,
     location: scan.location || "",
     tumor_detected: scan.tumor_detected,
+    language,
   });
   return data;
 }
