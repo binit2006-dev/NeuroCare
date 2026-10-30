@@ -45,6 +45,14 @@ Web app for MRI Brain tumor detection. User's PINN model will be dropped into th
 - Corrupt images -> 400; upload filenames sanitised
 - Sample-set accuracy (public Sartaj test images): 20/37 — pituitary 7/7, no_tumor 9/10, meningioma 4/10, glioma 0/10 -> likely domain shift vs BrainTumor_RGB training data
 
+## Implemented — Iteration 5 (Rewrite: plain HTML/CSS/JS + Flask, runnable locally)
+- User request: frontend only HTML/CSS/JS, Flask backend running the PINN model, same features, clone-and-run for college demo. Choices: Flask, MongoDB, Emergent Google sign-in, user's own OpenAI key, replace React app.
+- backend/app.py (Flask; serves frontend/public + /api), ai_advice.py (official openai SDK, Responses API json_schema strict, model gpt-6.1-sol via OPENAI_MODEL), server.py = a2wsgi adapter for Emergent preview only
+- frontend/public: index.html (hash routes #/, #/history, #/about, #/downloads), css/styles.css, js/app.js, scan.js, pages.js, i18n.js (EN/HI); React src removed (src/index.js stub only)
+- Security fixes: same-origin (no credentialed CORS), Lax cookie secure=request.is_secure, 10MB upload cap + PIL pixel cap, per-IP rate limits (remote_addr via ProxyFix), advice prompt built from stored scan, uploads no longer written to disk, torch weights_only, all UI text HTML-escaped
+- README.md with local setup (python app.py -> http://localhost:5000), backend/.env.example
+- Tests: 36 passed + 1 xfail (glioma accuracy); OPENAI account currently has NO CREDITS -> advice returns friendly 402 (EN/HI)
+
 ## Backlog
 - **P1**: Google Places integration for real nearby hospitals (optional, requires API key)
 - **P2**: PDF report export of results

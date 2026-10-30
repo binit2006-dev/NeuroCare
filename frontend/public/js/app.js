@@ -117,9 +117,9 @@ NC.route = () => {
   const h = window.location.hash.split("?")[0];
   return NAV.some((n) => n.hash === h) ? h : "#/";
 };
-NC.showView = (id) => {
+NC.showView = (id, { scroll = true } = {}) => {
   NC.$$(".view").forEach((v) => (v.hidden = v.id !== id));
-  window.scrollTo({ top: 0 });
+  if (scroll) window.scrollTo({ top: 0 });
 };
 NC.onRoute = () => {
   if (window.location.hash.includes("session_id=")) return;

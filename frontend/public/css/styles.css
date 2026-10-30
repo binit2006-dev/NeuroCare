@@ -168,6 +168,7 @@ input[type="range"]:disabled { opacity: .4; }
 .advice-status svg { color: var(--primary); }
 .error-box { display: flex; gap: 12px; align-items: flex-start; margin-top: 36px; border: 1px solid rgba(232, 112, 84, .4); background: rgba(232, 112, 84, .08); border-radius: 14px; padding: 18px 20px; }
 .error-box > svg { color: var(--coral); margin-top: 3px; }
+.error-box > div { min-width: 0; overflow-wrap: anywhere; }
 .advice-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 22px; margin-top: 40px; transition: opacity .3s ease; }
 .advice-grid.dim { opacity: .3; pointer-events: none; }
 .span-5 { grid-column: span 5; } .span-7 { grid-column: span 7; } .span-12 { grid-column: span 12; }
@@ -221,6 +222,7 @@ input[type="range"]:disabled { opacity: .4; }
 @keyframes glow { 0%, 100% { filter: drop-shadow(0 0 6px rgba(232, 112, 84, .55)); } 50% { filter: drop-shadow(0 0 16px rgba(232, 112, 84, .85)) brightness(1.15); } }
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 .reveal { animation: rise .7s ease both; }
+.no-reveal .reveal { animation: none; }
 .pulse { animation: breathe 2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 

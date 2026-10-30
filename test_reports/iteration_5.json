@@ -1,0 +1,45 @@
+{
+  "summary": "Full-stack retest after the Flask + plain HTML/CSS/JS rewrite. Backend: 36/36 pytest pass plus 1 xfail (the known glioma accuracy issue). Old tests were updated to the new contract, and the new tests are in test_flask_contract.py. Confirmed: /api/ and model-status (loaded, 224). /api/predict returns the full shape with a PNG heatmap data URL, and the heatmap is not stored in Mongo. Owner-only /api/scans/<id> returns 404 to anonymous users and other users. /api/my-scans returns 401 when signed out and is ordered newest first for the owner. Auth me/logout work with both cookie and Bearer, and a bogus session_id returns 401. /api/advice returns 422 for language 'fr', 404 for an unknown scan or another user's scan, and 402 'Your OpenAI account has no credits left...' for both en and hi. Security checks: uploads over 10MB return 413 from Flask; corrupt image and missing file return 400; path traversal on /api/downloads and on Flask static files (checked locally on :8001) returns 404; no Allow-Credentials header; torch.load uses weights_only=True. Frontend: desktop nav testids are present. The scan flow works: loader, then verdict, prob bars, heatmap, area %. The toggle sets overlay opacity to 0 and disables the slider; the slider at 40 gives opacity 0.4. The advice-error box shows the 402 message, retry-advice-button re-requests and shows the error again, and reset returns to the uploader. An XSS location string renders as literal text and no alert fired. Hindi: everything switches, html lang=hi, the setting persists in localStorage across reload, and toggling on results re-requested advice with language=hi. Auth UI: avatar and logout show when signed in, history shows 'Hello, Priya.' and the new scan (Pune), logout returns /me to 401, '#session_id=bogus' shows a toast and lands on #/, and sign-in redirects to auth.emergentagent.com with the encoded origin. Downloads lists download-link-* anchors, and About shows Yes / pinn_model.pth in EN and HI. Mobile 390px: mobile-nav-* is visible and the desktop nav is hidden. Home, history, about and downloads have no overflow in EN or HI. The results page overflows by 8px, caused by the advice-error text.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/predict, /api/advice (rate_limited)", "issue": "The rate-limit key uses the first entry of the client-controlled X-Forwarded-For header, so anyone can bypass the limit by spoofing it. Verified on localhost: predict returned 429, then 200 with 'X-Forwarded-For: 9.9.9.9'. ProxyFix(x_for=1) already sets request.remote_addr; use request.remote_addr only (or the last XFF hop)."},
+      {"endpoint": "/api/auth/session", "issue": "If requests.get to Emergent times out or fails, or the response JSON has no email, the endpoint raises an unhandled exception and returns 500 instead of 401/503."},
+      {"endpoint": "/api/advice", "issue": "Error details (402/429/503) are always in English, even when language=hi, so the Hindi UI shows English error text."},
+      {"endpoint": "PINN model", "issue": "Known from iteration 3, not a code bug: glioma is 0/10 on /app/scripts/mri_samples and meningioma is 4/10."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "advice-error box (mobile 390px)", "issue": "The long unbreakable URL 'platform.openai.com/settings/organization/billing' pushes the page to 398px, so the results page scrolls horizontally by 8px. Fix: .error-box > div { min-width: 0; overflow-wrap: anywhere; }", "selector": "[data-testid='advice-error']", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [
+      {"flow": "Results re-render", "issue": "renderResults() runs on every advice state change (loading, then error or success) and calls window.scrollTo top. Every .reveal card also replays its fade-in. If the user has scrolled down to the heatmap when advice arrives (about 10-20s later), the page jumps back to the top and flashes.", "affected_selectors": ["[data-testid='results-section']"]},
+      {"flow": "Logout while on results", "issue": "A signed-in user's scan results stay visible after logout. Retry advice then returns 404 'Scan not found.'", "affected_selectors": ["[data-testid='retry-advice-button']"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_flask_contract.py", "/app/backend/tests/test_auth_scans.py", "/app/backend/tests/test_model_heatmap.py", "/app/test_reports/pytest/pytest_iter5.xml"],
+  "action_items": [
+    "Fix the rate-limit IP source: use request.remote_addr (already proxy-fixed) instead of the raw first X-Forwarded-For entry",
+    "Add overflow-wrap:anywhere and min-width:0 to the advice-error text so the 390px results page doesn't overflow",
+    "In renderResults, avoid scrollTo(0) and avoid replaying .reveal animations on advice-state re-renders (only scroll and animate on the first render)",
+    "Wrap the Emergent session-data call in try/except and return 401/503 instead of 500",
+    "Optional: localize backend advice error messages for hi, or map status codes to i18n strings on the frontend",
+    "Optional: clear owned results on logout"
+  ],
+  "critical_code_review_comments": [
+    "app.py rate_limited(): uses the spoofable X-Forwarded-For first hop (security bypass)",
+    "app.py: _advice_locks is a defaultdict that grows without limit (one Lock per scan+language); fine for a demo, but it leaks memory over time",
+    "app.py predict: every upload is written to backend/uploads and never cleaned up; anonymous scans also fill the disk",
+    "scan.js renderResults: a full innerHTML re-render causes scroll jumps and animation replays",
+    "Code quality is otherwise good: consistent esc() on all API/LLM text, owner checks centralized in owned_scan, _id excluded everywhere, all files under 320 lines"
+  ],
+  "updated_files": ["/app/backend/tests/test_flask_contract.py (new)", "/app/backend/tests/test_auth_scans.py (CORS test changed to no-credentials contract)", "/app/backend/tests/test_model_heatmap.py (glioma case marked xfail)", "/app/backend/tests/test_hindi_advice.py (removed; old success-path contract no longer valid with zero OpenAI credits, copy at /tmp/old_test_hindi_advice.py)"],
+  "success_rate": {"backend": "100% (36/36, 1 xfail known model accuracy)", "frontend": "95% (all flows work; 8px mobile overflow on results and scroll-jump UX)"},
+  "test_credentials": "No passwords. Sessions were created via mongosh per /app/auth_testing.md (test_database).",
+  "seed_data_creation": "Test users, sessions and TEST_ scans were created and then all deleted (15 scans, 4 sessions, 7 users)",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run: cd /app/backend && pytest tests/ -q. Predict is rate limited at 30 per 10 min per IP; the public URL and localhost are separate buckets. Exploratory runs on localhost:8001 exhausted the 127.0.0.1 bucket. OpenAI has zero credits, so advice returns 402. In Playwright, after add_cookies you must page.reload(), because a hash-only goto doesn't re-run initAuth."
+}

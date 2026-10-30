@@ -1,5 +1,4 @@
 """NeuroCare — Flask backend (serves the website, the PINN model API and AI advice)."""
-import json
 import logging
 import os
 import threading
@@ -29,8 +28,6 @@ OPENAI_MODEL = os.environ.get("OPENAI_MODEL") or "gpt-6.1-sol"
 
 WEBSITE_DIR = (ROOT_DIR.parent / "frontend" / "public").resolve()
 DOWNLOADS_DIR = ROOT_DIR / "downloads"
-UPLOADS_DIR = ROOT_DIR / "uploads"
-UPLOADS_DIR.mkdir(exist_ok=True)
 DOWNLOADS_DIR.mkdir(exist_ok=True)
 
 MAX_UPLOAD_MB = 10
@@ -64,7 +61,7 @@ _hits_lock = threading.Lock()
 
 
 def rate_limited(bucket, limit, window_s=600):
-    ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "?").split(",")[0].strip()
+    ip = request.remote_addr or "?"  # ProxyFix already resolved the trusted proxy hop
     key, t = (bucket, ip), time.time()
     with _hits_lock:
         q = _hits[key]
@@ -140,23 +137,29 @@ def create_session():
     session_id = (request.get_json(silent=True) or {}).get("session_id")
     if not session_id:
         return error("session_id is required", 400)
-    r = requests.get(EMERGENT_SESSION_URL, headers={"X-Session-ID": session_id}, timeout=15)
+    try:
+        r = requests.get(EMERGENT_SESSION_URL, headers={"X-Session-ID": session_id}, timeout=15)
+    except requests.RequestException:
+        return error("Sign-in service is unreachable. Check your internet connection.", 503)
     if r.status_code != 200:
         return error("Invalid session", 401)
-    data = r.json()
+    try:
+        data = r.json()
+        email, name, token = data["email"], data["name"], data["session_token"]
+    except (ValueError, KeyError, TypeError):
+        return error("Invalid session", 401)
 
-    existing = db.users.find_one({"email": data["email"]}, {"_id": 0})
+    existing = db.users.find_one({"email": email}, {"_id": 0})
     if existing:
         user_id = existing["user_id"]
-        db.users.update_one({"user_id": user_id}, {"$set": {"name": data["name"], "picture": data.get("picture")}})
+        db.users.update_one({"user_id": user_id}, {"$set": {"name": name, "picture": data.get("picture")}})
     else:
         user_id = f"user_{uuid.uuid4().hex[:12]}"
         db.users.insert_one({
-            "user_id": user_id, "email": data["email"], "name": data["name"],
+            "user_id": user_id, "email": email, "name": name,
             "picture": data.get("picture"), "created_at": now(),
         })
 
-    token = data["session_token"]
     db.user_sessions.insert_one({
         "user_id": user_id, "session_token": token,
         "expires_at": now() + timedelta(days=SESSION_DAYS), "created_at": now(),
@@ -215,7 +218,6 @@ def predict():
 
     user = current_user()
     scan_id = str(uuid.uuid4())
-    (UPLOADS_DIR / f"{scan_id}{Path(mri.filename or '').suffix[:10]}").write_bytes(image_bytes)
     record = {
         "id": scan_id,
         "user_id": user["user_id"] if user else None,
@@ -252,7 +254,22 @@ def my_scans():
 # AI advice (OpenAI, user's own key)
 # ----------------------------------------------------------------------------
 ADVICE_FIELD = {"en": "advice", "hi": "advice_hi"}
-_advice_locks = defaultdict(threading.Lock)
+_advice_locks = {}
+_locks_guard = threading.Lock()
+
+
+def _with_advice_lock(key, fn):
+    with _locks_guard:
+        entry = _advice_locks.setdefault(key, [threading.Lock(), 0])
+        entry[1] += 1
+    try:
+        with entry[0]:
+            return fn()
+    finally:
+        with _locks_guard:
+            entry[1] -= 1
+            if entry[1] == 0:
+                _advice_locks.pop(key, None)
 
 
 @app.post("/api/advice")
@@ -266,7 +283,8 @@ def advice():
         return error("Scan not found.", 404)
 
     field = ADVICE_FIELD[language]
-    with _advice_locks[(scan["id"], language)]:
+
+    def produce():
         cached = db.scans.find_one({"id": scan["id"]}, {"_id": 0, field: 1}).get(field)
         if cached:
             return jsonify(cached)
@@ -281,6 +299,8 @@ def advice():
             return error(str(exc), exc.status)
         db.scans.update_one({"id": scan["id"]}, {"$set": {field: parsed}})
         return jsonify(parsed)
+
+    return _with_advice_lock((scan["id"], language), produce)
 
 
 # ----------------------------------------------------------------------------

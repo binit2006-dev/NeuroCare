@@ -1,5 +1,6 @@
 /* NeuroCare scan flow: upload -> PINN prediction -> heatmap -> AI advice */
 (() => {
+  const NC = window.NC;
   const { $, esc, t, api, toast, icons } = NC;
   const state = { file: null, preview: null, scan: null, advice: null, adviceError: null, loadingAdvice: false, reqId: 0 };
 
@@ -34,7 +35,7 @@
     try {
       state.scan = await api("/predict", { method: "POST", body: fd });
       state.advice = null;
-      renderResults();
+      renderResults({ scroll: true });
       loadAdvice();
     } catch (err) {
       toast(err.message || t("up_failed"), "error");
@@ -161,16 +162,23 @@
     return "";
   }
 
-  function renderResults() {
+  function renderAdvice() {
+    const box = $("#advice-root");
+    if (!box) return;
+    box.innerHTML = adviceStatus() + adviceSection(state.advice);
+    $("#retry-advice") && ($("#retry-advice").onclick = loadAdvice);
+    icons();
+  }
+
+  function renderResults({ scroll = false } = {}) {
     const s = state.scan;
     const root = $("#results-root");
     const keepOpacity = $("#heatmap-opacity-slider")?.value;
     const keepShow = $("#heatmap-toggle")?.checked;
-    root.innerHTML = verdictCard(s) + heatmapCard(s) + adviceStatus() + adviceSection(state.advice);
-    NC.showView("view-results");
-    window.scrollTo({ top: 0 });
+    root.innerHTML = verdictCard(s) + heatmapCard(s) + `<div id="advice-root"></div>`;
+    root.classList.toggle("no-reveal", !scroll);
+    NC.showView("view-results", { scroll });
     $("#reset-button").onclick = reset;
-    $("#retry-advice") && ($("#retry-advice").onclick = loadAdvice);
     const slider = $("#heatmap-opacity-slider");
     if (slider) {
       if (keepOpacity) slider.value = keepOpacity;
@@ -184,15 +192,17 @@
       $("#heatmap-toggle").onchange = sync;
       sync();
     }
-    icons();
+    renderAdvice();
   }
+
+  const ERROR_KEYS = { 402: "err_402", 429: "err_429", 502: "err_502", 503: "err_503", 404: "err_404" };
 
   async function loadAdvice() {
     const myId = ++state.reqId;
     const scan = state.scan;
     state.loadingAdvice = true;
     state.adviceError = null;
-    renderResults();
+    renderAdvice();
     try {
       const data = await api("/advice", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -202,10 +212,11 @@
       state.advice = data;
     } catch (err) {
       if (myId !== state.reqId) return;
-      state.adviceError = err.message || t("advice_error_fallback");
+      const key = ERROR_KEYS[err.status];
+      state.adviceError = NC.lang === "hi" && key ? t(key) : err.message || t("advice_error_fallback");
     }
     state.loadingAdvice = false;
-    if (state.scan === scan && NC.route() === "#/") renderResults();
+    if (state.scan === scan) renderAdvice();
   }
 
   function reset() {
@@ -219,10 +230,19 @@
   }
 
   /* ---------- Wiring ---------- */
-  NC.views["#/"] = () => (state.scan ? renderResults() : NC.showView("view-home"));
+  NC.views["#/"] = () => (state.scan ? renderResults({ scroll: true }) : NC.showView("view-home"));
 
   document.addEventListener("nc:lang", () => {
-    if (state.scan && NC.route() === "#/") loadAdvice();
+    if (state.scan && NC.route() === "#/") { renderResults(); loadAdvice(); }
+  });
+
+  document.addEventListener("nc:auth", () => {
+    if (!state.scan?.user_id || NC.user) return;
+    state.reqId++;
+    state.scan = null;
+    state.advice = null;
+    clearFile();
+    if (NC.route() === "#/") NC.showView("view-home");
   });
 
   document.addEventListener("DOMContentLoaded", () => {

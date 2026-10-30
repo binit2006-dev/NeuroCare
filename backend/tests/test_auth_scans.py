@@ -120,10 +120,9 @@ def test_logout_bearer():
         "logout ignores Bearer token; session not deleted"
 
 
-# --- CORS
-def test_cors_credentials():
+# --- CORS (new contract: app must NOT send Allow-Credentials; gateway may add plain '*')
+def test_cors_no_credentials():
     origin = "https://example-origin.test"
-    r = requests.options(f"{BASE_URL}/api/auth/me", headers={
-        "Origin": origin, "Access-Control-Request-Method": "GET"})
-    assert r.headers.get("access-control-allow-origin") == origin
-    assert r.headers.get("access-control-allow-credentials") == "true"
+    r = requests.get(f"{BASE_URL}/api/auth/me", headers={"Origin": origin})
+    assert r.headers.get("access-control-allow-credentials") != "true"
+    assert r.headers.get("access-control-allow-origin") in (None, "*")

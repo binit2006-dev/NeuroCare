@@ -84,7 +84,6 @@ backend/
     pinn_model.pth       ← your trained PINN weights
     pinn_predictor.py    ← your exact ImprovedPINNCNN class + preprocessing + heatmap
   downloads/             files shown on the Downloads page
-  uploads/               uploaded scans (created automatically)
   requirements.txt
   .env.example
   server.py              only used by the Emergent preview (not needed locally)

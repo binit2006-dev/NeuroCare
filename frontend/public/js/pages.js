@@ -1,5 +1,6 @@
 /* NeuroCare pages: My Scans, About, Downloads */
 (() => {
+  const NC = window.NC;
   const { $, esc, t, api, icons } = NC;
 
   /* ---------- My Scans ---------- */
