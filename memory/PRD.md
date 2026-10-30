@@ -32,6 +32,12 @@ Web app for MRI Brain tumor detection. User's PINN model will be dropped into th
 - Ownership check on /api/scans/{id} and /api/advice for scans with a user_id
 - CORS echoes origin with credentials
 
+## Implemented — Iteration 3 (Real PINN model)
+- User's checkpoint saved as backend/models/pinn_model.pth (state_dict); architecture rebuilt from tensor shapes in pinn_predictor.py (U-Net encoder/decoder + Fisher-KPP physics feats + classifier 259->128->4)
+- Preprocess: RGB, 256x256, ImageNet normalisation; class order glioma, meningioma, no_tumor, pituitary (alphabetical ImageFolder assumption)
+- Sanity check on 37 public Sartaj test MRIs: ~59% overall; pituitary/no_tumor/meningioma strong, glioma never predicted (mapped to meningioma) -> exact training preprocessing/physics features unconfirmed
+- torch CPU added (requirements.txt has --extra-index-url for CPU wheels); 4 sample MRIs in downloads/
+
 ## Backlog
 - **P1**: Google Places integration for real nearby hospitals (optional, requires API key)
 - **P2**: PDF report export of results
@@ -39,5 +45,5 @@ Web app for MRI Brain tumor detection. User's PINN model will be dropped into th
 - **P2**: Multilingual support (Hindi, Spanish, etc.)
 
 ## Known Notes
-- PINN model is MOCKED (demo_mode=true) until user drops their trained model into `/app/backend/models/`. Instructions are in `/app/backend/models/README.md` and in `pinn_predictor.py`.
+- PINN model is REAL (user checkpoint). Need user's training code to confirm preprocessing & physics feature definitions (glioma recall issue).
 - GPT 6 Sol advice is REAL and uses `EMERGENT_LLM_KEY`.

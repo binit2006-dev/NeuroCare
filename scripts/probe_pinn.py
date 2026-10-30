@@ -76,18 +76,3 @@ def load(size, norm):
     return torch.stack(xs)
 
 
-if __name__ == "__main__":
-    PHYS = ["u_lap_res", "D_rho_res", "u_std_res", "u_lap_react", "res2_u_max", "u_res_react", "u_res2_react", "u_lap2_react", "zeros"]
-    results = []
-    for size, norm in itertools.product([128, 224, 256], NORMS):
-    X = load(size, norm)
-    for dec, phys in itertools.product("ABC", PHYS):
-        net = Net(dec, phys); net.load_state_dict(SD); net.eval()
-        with torch.no_grad():
-            pr = net(X).softmax(1)
-        acc = (pr.argmax(1) == labels).float().mean().item()
-        results.append((acc, pr.max(1).values.mean().item(), size, norm, dec, phys))
-    results.sort(reverse=True)
-    for r in results[:15]:
-    print("acc=%.2f conf=%.2f size=%d norm=%s dec=%s phys=%s" % r)
-    print("n images", len(files))
