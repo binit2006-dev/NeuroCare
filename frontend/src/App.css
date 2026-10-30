@@ -26,6 +26,12 @@ html, body, #root {
 }
 .drift { animation: drift 14s ease-in-out infinite; }
 
+@keyframes glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(232,112,84,0.55)) brightness(1); }
+  50%      { filter: drop-shadow(0 0 16px rgba(232,112,84,0.85)) brightness(1.15); }
+}
+.heatmap-glow { mix-blend-mode: screen; animation: glow-pulse 3.2s ease-in-out infinite; }
+
 /* Subtle grain */
 .grain {
   position: relative;

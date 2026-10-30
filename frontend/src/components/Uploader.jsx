@@ -33,7 +33,7 @@ export default function Uploader({ onComplete, setLoading }) {
     try {
       setLoading(true);
       const scan = await predictMRI(file, location);
-      onComplete(scan);
+      onComplete({ ...scan, preview });
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Analysis failed. Please try again.");
     } finally {

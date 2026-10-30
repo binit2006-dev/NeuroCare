@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { fetchAdvice } from "@/lib/api";
 import { CheckCircle2, Info, Phone, Hospital, UserRound, Sparkles, RefreshCcw, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import HeatmapViewer from "@/components/HeatmapViewer";
 
 const TUMOR_LABEL = {
   no_tumor: "No tumor detected",
@@ -98,6 +99,8 @@ export default function Results({ scan, onReset }) {
             ))}
           </div>
         </div>
+
+        <HeatmapViewer scan={scan} />
 
         {/* AI advice */}
         {loadingAdvice && (

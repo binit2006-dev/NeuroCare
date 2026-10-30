@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
+import asyncio
 import json
 import re
 import logging
@@ -70,6 +71,7 @@ class ScanRecord(BaseModel):
     confidence: float
     class_probabilities: dict
     demo_mode: bool
+    tumor_area_pct: Optional[float] = None
     advice: Optional[dict] = None
 
 
@@ -206,7 +208,7 @@ async def predict(request: Request, mri: UploadFile = File(...), location: str =
     if len(image_bytes) == 0:
         raise HTTPException(status_code=400, detail="Empty file.")
 
-    result = pinn_predictor.predict(image_bytes)
+    result = await asyncio.to_thread(pinn_predictor.predict, image_bytes)
 
     scan_id = str(uuid.uuid4())
     saved_name = f"{scan_id}_{mri.filename}"
@@ -222,9 +224,10 @@ async def predict(request: Request, mri: UploadFile = File(...), location: str =
         confidence=result.confidence,
         class_probabilities=result.class_probabilities,
         demo_mode=result.demo_mode,
+        tumor_area_pct=result.tumor_area_pct,
     )
     await db.scans.insert_one(record.model_dump())
-    return record.model_dump()
+    return {**record.model_dump(), "heatmap": result.heatmap}
 
 
 def _build_prompt(req: AdviceRequest) -> str:
