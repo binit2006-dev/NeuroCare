@@ -38,6 +38,13 @@ Web app for MRI Brain tumor detection. User's PINN model will be dropped into th
 - Sanity check on 37 public Sartaj test MRIs: ~59% overall; pituitary/no_tumor/meningioma strong, glioma never predicted (mapped to meningioma) -> exact training preprocessing/physics features unconfirmed
 - torch CPU added (requirements.txt has --extra-index-url for CPU wheels); 4 sample MRIs in downloads/
 
+## Implemented — Iteration 4 (Exact model + Tumor Heatmap)
+- pinn_predictor.py now uses user's exact ImprovedPINNCNN (notebook variant all_improvements: unet head; pool inside blocks; u_stats = mean/max/frac>0.5; 224px, ImageNet norm); strict state_dict load
+- /api/predict returns heatmap (RGBA PNG data URL from 56x56 density map u, thresholded at 0.2, blurred coral glow) + tumor_area_pct (stored); heatmap not stored in Mongo
+- HeatmapViewer on results: overlay on uploaded scan, pulsing glow, toggle + intensity slider
+- Corrupt images -> 400; upload filenames sanitised
+- Sample-set accuracy (public Sartaj test images): 20/37 — pituitary 7/7, no_tumor 9/10, meningioma 4/10, glioma 0/10 -> likely domain shift vs BrainTumor_RGB training data
+
 ## Backlog
 - **P1**: Google Places integration for real nearby hospitals (optional, requires API key)
 - **P2**: PDF report export of results
@@ -45,5 +52,5 @@ Web app for MRI Brain tumor detection. User's PINN model will be dropped into th
 - **P2**: Multilingual support (Hindi, Spanish, etc.)
 
 ## Known Notes
-- PINN model is REAL (user checkpoint). Need user's training code to confirm preprocessing & physics feature definitions (glioma recall issue).
+- PINN model is REAL and matches notebook exactly. Low glioma recall on public Sartaj samples; verify on user's own BrainTumor_RGB Test set.
 - GPT 6 Sol advice is REAL and uses `EMERGENT_LLM_KEY`.

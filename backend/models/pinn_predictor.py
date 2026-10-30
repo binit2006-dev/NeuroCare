@@ -116,7 +116,8 @@ def _heatmap_data_url(u: np.ndarray, size: tuple) -> str:
     w, h = size
     scale = min(1.0, HEATMAP_MAX_SIDE / max(w, h))
     out = (max(1, int(w * scale)), max(1, int(h * scale)))
-    alpha = Image.fromarray((np.clip(u, 0, 1) ** 0.8 * 230).astype(np.uint8), "L").resize(out, Image.BICUBIC)
+    u = np.clip((u - 0.2) / 0.8, 0, 1)  # suppress faint background activation
+    alpha = Image.fromarray((u ** 0.8 * 230).astype(np.uint8), "L").resize(out, Image.BICUBIC)
     alpha = alpha.filter(ImageFilter.GaussianBlur(radius=max(2, out[0] // 80)))
     rgba = Image.new("RGBA", out, HEATMAP_RGB + (0,))
     rgba.putalpha(alpha)

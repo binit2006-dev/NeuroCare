@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from pydantic import BaseModel, Field, ConfigDict
+from PIL import UnidentifiedImageError
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
@@ -208,10 +209,13 @@ async def predict(request: Request, mri: UploadFile = File(...), location: str =
     if len(image_bytes) == 0:
         raise HTTPException(status_code=400, detail="Empty file.")
 
-    result = await asyncio.to_thread(pinn_predictor.predict, image_bytes)
+    try:
+        result = await asyncio.to_thread(pinn_predictor.predict, image_bytes)
+    except (UnidentifiedImageError, OSError):
+        raise HTTPException(status_code=400, detail="Please upload a valid MRI image (jpg/png).")
 
     scan_id = str(uuid.uuid4())
-    saved_name = f"{scan_id}_{mri.filename}"
+    saved_name = f"{scan_id}{Path(mri.filename or '').suffix[:10]}"
     (UPLOADS_DIR / saved_name).write_bytes(image_bytes)
 
     record = ScanRecord(

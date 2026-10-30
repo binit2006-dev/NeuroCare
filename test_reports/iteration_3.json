@@ -1,0 +1,34 @@
+{
+  "summary": "Tested the real ImprovedPINNCNN model and the tumor heatmap. Backend: 17/19 pytest pass, counting the iter2 auth regression suite (test_model_heatmap.py + test_auth_scans.py). /api/model-status: model_loaded=true, demo_mode=false, load_error=null, input_size=224, correct classes. /api/predict on meningioma_tumor_2 -> meningioma 99.4%, tumor_area_pct=7.5, heatmap is a valid 512x512 RGBA PNG data URL. no_tumor_1 -> no_tumor, pituitary_tumor_5 -> pituitary. The heatmap is not saved in Mongo and not returned by GET /api/scans/{id}; tumor_area_pct is saved. The model class matches the notebook's unet head exactly and the state_dict loads strictly. Frontend: all requested flows pass. heatmap-card shows the base blob image with the overlay aligned at the same 448x448 box, and the glow sits on the tumor. The toggle sets opacity 0.85 -> 0 -> 0.85, and the slider changes it (0.6 by keyboard, 0.3 by click). No demo banner. The 4 probability bars render and all 6 advice cards load. A no_tumor scan shows 'No region stands out' and 0.0%. Regression: /downloads lists all 4 samples, /about shows Model loaded Yes, and signed-in /history shows the new scan.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/predict", "issue": "A corrupt or non-decodable file sent with an image/* content type returns 500 (PIL.UnidentifiedImageError from pinn_predictor.predict). It should be caught and returned as 400 'Please upload a valid MRI image'."},
+      {"endpoint": "POST /api/predict", "issue": "saved_name = f'{scan_id}_{mri.filename}' uses the client filename without sanitizing it. Use Path(mri.filename).name or the extension only, to avoid path-traversal or odd characters."},
+      {"endpoint": "Model accuracy (informational)", "issue": "Tested on all 37 local samples in /app/scripts/mri_samples. 20/37 correct: pituitary 7/7, no_tumor 9/10 (no_tumor_11 -> meningioma), meningioma 4/10 (missed 4,5,7,8,11,12), glioma 0/10 (mostly predicted meningioma, pituitary or no_tumor). The architecture and preprocessing (Resize 224, ImageNet normalization, RGB, class order) match the notebook exactly, so this looks like domain shift between these samples (Sartaj-style filenames) and the training set (BrainTumor_RGB), or a checkpoint/variant mismatch. It is not a code bug. Consider telling the user, or checking that pinn_model.pth is the all_improvements checkpoint."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_model_heatmap.py", "/app/backend/tests/test_auth_scans.py", "/app/test_reports/pytest/pytest_results_iter3.xml"],
+  "action_items": [
+    "Wrap Image.open/predict in /api/predict with try/except (PIL.UnidentifiedImageError, OSError) and return HTTP 400 instead of 500",
+    "Sanitize the uploaded filename before writing to UPLOADS_DIR",
+    "Optional: tell the user about the low glioma accuracy on the sample set and confirm the checkpoint matches the 'all_improvements' variant"
+  ],
+  "critical_code_review_comments": [
+    "pinn_predictor._ensure_loaded caches _load_error permanently. A transient load failure keeps the app in demo mode until restart. This is acceptable but should be documented.",
+    "The heatmap glow also shows weaker activation outside the tumor (for example a midline band on meningioma_tumor_2). This is model output, but a threshold (e.g. zero alpha for u<0.2) would give a cleaner 'soft glow'.",
+    "The heatmap data URL (~tens of KB) is only in the predict response. If a user opens a past scan from /history, there is no heatmap. This is expected by design but worth noting in the UI."
+  ],
+  "updated_files": ["/app/backend/tests/test_model_heatmap.py"],
+  "success_rate": {"backend": "89% (17/19; 1 failure is the model's accuracy on glioma_tumor_1, 1 is the corrupt-image 500)", "frontend": "100%"},
+  "test_credentials": "No passwords. A session was created via mongosh per /app/auth_testing.md (test_credentials.md present).",
+  "seed_data_creation": "Temporary test user/session (test.user.it3*) and TEST_* scans were created and then deleted.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run pytest /app/backend/tests/test_model_heatmap.py /app/backend/tests/test_auth_scans.py. The glioma_tumor_1 expectation fails because of model accuracy, not code. test_predict_corrupt_image expects 400 (currently 500). The notebook is at /app/scripts/improved_pinn_cnn.ipynb. Heatmap testids: heatmap-card, heatmap-base-image, heatmap-overlay, tumor-area-pct, heatmap-toggle, heatmap-opacity-slider."
+}
